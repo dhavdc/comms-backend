@@ -251,6 +251,7 @@ class AppStoreService {
 
                 case "EXPIRED":
                 case "DID_FAIL_TO_RENEW":
+                case "GRACE_PERIOD_EXPIRED":
                     await this.handleSubscriptionExpired(
                         userId,
                         decodedTransaction
@@ -259,6 +260,14 @@ class AppStoreService {
 
                 case "DID_CHANGE_RENEWAL_STATUS":
                     await this.handleRenewalStatusChange(
+                        userId,
+                        decodedTransaction,
+                        notification
+                    );
+                    break;
+
+                case "DID_CHANGE_RENEWAL_PREF":
+                    await this.handleRenewalPreferenceChange(
                         userId,
                         decodedTransaction,
                         notification
@@ -383,6 +392,32 @@ class AppStoreService {
         // Send Discord notification
         await discordService.sendAppStoreNotification({
             type: "DID_CHANGE_RENEWAL_STATUS",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment,
+            price: transaction.price,
+            currency: transaction.currency
+        });
+    }
+
+    private async handleRenewalPreferenceChange(
+        userId: string,
+        transaction: JWSTransactionDecodedPayload,
+        notification: WebhookNotification
+    ): Promise<void> {
+        logger.info("Renewal preference changed:", {
+            userId,
+            transactionId: transaction.originalTransactionId,
+            subtype: notification.subtype,
+        });
+
+        // Handle subscription preference changes (e.g., upgrade/downgrade)
+        // This is typically informational and doesn't immediately affect current subscription status
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "DID_CHANGE_RENEWAL_PREF",
             userId,
             productId: transaction.productId,
             transactionId: transaction.originalTransactionId,

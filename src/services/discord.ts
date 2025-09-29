@@ -45,6 +45,10 @@ class DiscordService {
                     title = "⚙️ Renewal Status Changed";
                     color = 0xffff00; // Yellow
                     break;
+                case "DID_CHANGE_RENEWAL_PREF":
+                    title = "🔄 Renewal Preference Changed";
+                    color = 0x9932cc; // Purple
+                    break;
                 default:
                     title = `📱 App Store Event: ${type}`;
                     color = 0x888888; // Gray

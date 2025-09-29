@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { appStoreService } from '@/services/appstore';
 import { validate, validateWebhookSchema } from '@/middleware/validation';
+import { appleTestNotifications } from '@/utils/apple-test-notifications';
 import logger from '@/utils/logger';
 import { APIResponse } from '@/types';
 
@@ -78,6 +79,74 @@ router.get('/test',
       message: 'Webhook service is running',
       timestamp: new Date().toISOString()
     });
+  }
+);
+
+/**
+ * POST /api/webhooks/apple/test
+ * Request Apple to send a test notification to your webhook endpoint
+ * This is the official way to test Apple webhooks
+ */
+router.post('/apple/test',
+  async (req, res): Promise<void> => {
+    try {
+      logger.info('Requesting test notification from Apple...');
+
+      const testNotificationToken = await appleTestNotifications.requestTestNotification();
+
+      if (testNotificationToken) {
+        res.json({
+          success: true,
+          message: 'Test notification requested successfully',
+          testNotificationToken,
+          instructions: `Apple will send a test notification to your webhook endpoint. Use the token to check status at GET /api/webhooks/apple/test/${testNotificationToken}`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to request test notification'
+        });
+      }
+    } catch (error) {
+      logger.error('Error requesting test notification:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/webhooks/apple/test/:token
+ * Check the status of a test notification
+ */
+router.get('/apple/test/:token',
+  async (req, res): Promise<void> => {
+    try {
+      const { token } = req.params;
+      logger.info('Checking test notification status for token:', token);
+
+      const status = await appleTestNotifications.getTestNotificationStatus(token);
+
+      if (status) {
+        res.json({
+          success: true,
+          status
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          error: 'Test notification status not found'
+        });
+      }
+    } catch (error) {
+      logger.error('Error getting test notification status:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
   }
 );
 
