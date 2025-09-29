@@ -201,6 +201,7 @@ class AppStoreService {
         }
 
         try {
+            logger.info(notification);
             // Decode the transaction info
             const decodedTransaction =
                 await this.verifier.verifyAndDecodeTransaction(
@@ -211,6 +212,8 @@ class AppStoreService {
                 logger.error("Failed to decode transaction from notification");
                 return false;
             }
+
+            logger.info(decodedTransaction);
 
             // Find the user associated with this transaction
             const existingSubscription =
