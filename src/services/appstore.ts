@@ -18,6 +18,7 @@ import {
     SUBSCRIPTION_PRODUCTS,
 } from "@/types";
 import { databaseService } from "./database";
+import { discordService } from "./discord";
 import fs from "fs";
 
 class AppStoreService {
@@ -292,6 +293,15 @@ class AppStoreService {
 
         await databaseService.updateUserSubscriptionStatus(userId, true);
         await databaseService.setHasPurchasedSubscriptionBefore(userId);
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "SUBSCRIBED",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment
+        });
     }
 
     private async handleSubscriptionRenewed(
@@ -317,6 +327,15 @@ class AppStoreService {
         }
 
         await databaseService.updateUserSubscriptionStatus(userId, true);
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "DID_RENEW",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment
+        });
     }
 
     private async handleSubscriptionExpired(
@@ -329,6 +348,15 @@ class AppStoreService {
         });
 
         await databaseService.updateUserSubscriptionStatus(userId, false);
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "EXPIRED",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment
+        });
     }
 
     private async handleRenewalStatusChange(
@@ -344,6 +372,15 @@ class AppStoreService {
 
         // Handle auto-renewal status changes
         // This is informational and doesn't immediately affect subscription status
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "DID_CHANGE_RENEWAL_STATUS",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment
+        });
     }
 
     private async handleRefund(
@@ -356,6 +393,15 @@ class AppStoreService {
         });
 
         await databaseService.updateUserSubscriptionStatus(userId, false);
+
+        // Send Discord notification
+        await discordService.sendAppStoreNotification({
+            type: "REFUND",
+            userId,
+            productId: transaction.productId,
+            transactionId: transaction.originalTransactionId,
+            environment: config.apple.environment
+        });
     }
 
     private isSubscriptionActive(
