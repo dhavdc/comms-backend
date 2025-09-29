@@ -51,7 +51,8 @@ class AppStoreService {
             appleCertificates, // Apple root certificates (empty array uses built-in certs)
             true, // Enable online checks
             this.environment,
-            config.apple.bundleId
+            config.apple.bundleId,
+            config.apple.appAppleId
         );
     }
 

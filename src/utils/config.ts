@@ -15,6 +15,7 @@ interface Config {
         issuerId: string;
         keyId: string;
         bundleId: string;
+        appAppleId: number;
         environment: "Sandbox" | "Production";
         privateKey: string;
     };
@@ -49,6 +50,7 @@ function validateConfig(): Config {
         "APPLE_ISSUER_ID",
         "APPLE_KEY_ID",
         "APPLE_BUNDLE_ID",
+        "APPLE_APP_APPLE_ID",
         "APPLE_PRIVATE_KEY",
         "JWT_SECRET",
         "API_KEY",
@@ -79,6 +81,7 @@ function validateConfig(): Config {
             issuerId: process.env.APPLE_ISSUER_ID!,
             keyId: process.env.APPLE_KEY_ID!,
             bundleId: process.env.APPLE_BUNDLE_ID!,
+            appAppleId: parseInt(process.env.APPLE_APP_APPLE_ID!, 10),
             environment: (environment as "Sandbox" | "Production") || "Sandbox",
             privateKey: loadApplePrivateKey(),
         },
