@@ -5,7 +5,9 @@ import {
     ReceiptUtility,
     JWSTransactionDecodedPayload,
     JWSRenewalInfoDecodedPayload,
-    DecodedNotificationPayload,
+    Order,
+    TransactionHistoryRequest,
+    ProductType,
 } from "@apple/app-store-server-library";
 import { config } from "@/utils/config";
 import logger from "@/utils/logger";
@@ -75,11 +77,16 @@ class AppStoreService {
 
                     if (decodedTransaction) {
                         // Verify that the transaction belongs to the requesting user
-                        if (decodedTransaction.appAccountToken !== request.userId) {
+                        if (
+                            decodedTransaction.appAccountToken !==
+                            request.userId
+                        ) {
                             logger.warn("Transaction ownership mismatch", {
                                 requestUserId: request.userId,
-                                transactionAppAccountToken: decodedTransaction.appAccountToken,
-                                transactionId: decodedTransaction.originalTransactionId,
+                                transactionAppAccountToken:
+                                    decodedTransaction.appAccountToken,
+                                transactionId:
+                                    decodedTransaction.originalTransactionId,
                             });
                             return {
                                 success: false,
@@ -174,7 +181,9 @@ class AppStoreService {
                 subtype: decodedNotification.subtype,
             });
 
-            return await this.processNotification(decodedNotification);
+            return await this.processNotification(
+                decodedNotification as WebhookNotification
+            );
         } catch (error) {
             logger.error("Webhook processing failed:", error);
             return false;
@@ -182,7 +191,7 @@ class AppStoreService {
     }
 
     private async processNotification(
-        notification: DecodedNotificationPayload
+        notification: WebhookNotification
     ): Promise<boolean> {
         const { notificationType, subtype, data } = notification;
 
@@ -322,7 +331,7 @@ class AppStoreService {
     private async handleRenewalStatusChange(
         userId: string,
         transaction: JWSTransactionDecodedPayload,
-        notification: DecodedNotificationPayload
+        notification: WebhookNotification
     ): Promise<void> {
         logger.info("Renewal status changed:", {
             userId,
@@ -384,36 +393,50 @@ class AppStoreService {
 
             // Check the most recent subscription
             const latestSubscription = subscriptions[0];
+            if (!latestSubscription) {
+                return { active: false };
+            }
+
+            const transactionHistoryRequest: TransactionHistoryRequest = {
+                sort: Order.ASCENDING,
+                revoked: false,
+                productTypes: [ProductType.AUTO_RENEWABLE],
+            };
 
             // Get current subscription status from Apple
             const transactionHistory = await this.client.getTransactionHistory(
                 latestSubscription.transaction_id,
-                undefined, // revision
-                undefined, // startDate
-                undefined, // endDate
-                [latestSubscription.product_id] // productIds
+                null, // revision
+                // startDate
+                transactionHistoryRequest
             );
 
             if (
                 transactionHistory.signedTransactions &&
                 transactionHistory.signedTransactions.length > 0
             ) {
+                const firstTransaction =
+                    transactionHistory.signedTransactions[0];
+                if (!firstTransaction) {
+                    return { active: false };
+                }
                 const latestTransaction =
                     await this.verifier.verifyAndDecodeTransaction(
-                        transactionHistory.signedTransactions[0]
+                        firstTransaction
                     );
 
                 if (latestTransaction) {
                     const isActive =
                         this.isSubscriptionActive(latestTransaction);
-                    return {
+                    const result: { active: boolean; expiresDate?: string } = {
                         active: isActive,
-                        expiresDate: latestTransaction.expiresDate
-                            ? new Date(
-                                  latestTransaction.expiresDate
-                              ).toISOString()
-                            : undefined,
                     };
+                    if (latestTransaction.expiresDate) {
+                        result.expiresDate = new Date(
+                            latestTransaction.expiresDate
+                        ).toISOString();
+                    }
+                    return result;
                 }
             }
 

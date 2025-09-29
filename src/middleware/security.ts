@@ -23,7 +23,7 @@ export const rateLimitByIP = new Map<string, { count: number; resetTime: number 
 
 export const simpleRateLimit = (maxRequests: number, windowMs: number) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const ip = req.ip;
+    const ip = req.ip || 'unknown';
     const now = Date.now();
 
     // Clean up expired entries
