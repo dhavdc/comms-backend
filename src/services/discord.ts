@@ -9,12 +9,14 @@ export interface DiscordNotificationData {
     productId?: string | undefined;
     transactionId?: string | undefined;
     environment?: string | undefined;
+    price?: number | undefined;
+    currency?: string | undefined;
 }
 
 class DiscordService {
     async sendAppStoreNotification(data: DiscordNotificationData): Promise<void> {
         try {
-            const { type, userId, productId, transactionId, environment } = data;
+            const { type, userId, productId, transactionId, environment, price, currency } = data;
             const environmentText = environment || config.apple.environment;
             const envEmoji = environmentText === "Production" ? "🟢" : "🟡";
 
@@ -79,6 +81,24 @@ class DiscordService {
                     name: "Transaction ID",
                     value: transactionId,
                     inline: false
+                });
+            }
+
+            // Add price information if available
+            if (price !== undefined && currency) {
+                // Convert from milliunits to currency units (divide by 1000)
+                const priceInUnits = price / 1000;
+                const formattedPrice = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(priceInUnits);
+
+                embed.fields.push({
+                    name: "💰 Price",
+                    value: formattedPrice,
+                    inline: true
                 });
             }
 
