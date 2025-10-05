@@ -312,7 +312,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 
@@ -348,7 +348,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 
@@ -371,7 +371,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 
@@ -397,7 +397,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 
@@ -423,7 +423,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 
@@ -446,7 +446,7 @@ class AppStoreService {
             transactionId: transaction.originalTransactionId,
             environment: config.apple.environment,
             price: transaction.price,
-            currency: transaction.currency
+            currency: transaction.currency,
         });
     }
 

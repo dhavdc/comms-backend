@@ -1,7 +1,11 @@
 import { config } from "@/utils/config";
 import logger from "@/utils/logger";
 
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1422023513006538886/78jeJBazdcV88QngfPGHhiccIqZuoaPGxIMgEu3F81LpIfook3QDjnz_3xk7sx69wNRZ";
+const DISCORD_WEBHOOK_URL =
+    "https://discord.com/api/webhooks/1422023513006538886/78jeJBazdcV88QngfPGHhiccIqZuoaPGxIMgEu3F81LpIfook3QDjnz_3xk7sx69wNRZ";
+
+const DISCORD_SUPABASE_WEBHOOK_URL =
+    "https://discord.com/api/webhooks/1422445444499378327/mshh0Ge2mVLUXa20YTtMSnT_7wTdjzDBXxKSD9HgY_QOd7iMsP2iLV-Xi_byl3KtD4pP";
 
 export interface DiscordNotificationData {
     type: string;
@@ -14,9 +18,77 @@ export interface DiscordNotificationData {
 }
 
 class DiscordService {
-    async sendAppStoreNotification(data: DiscordNotificationData): Promise<void> {
+    async sendUserSignupNotification(
+        userId: string,
+        callsign?: string
+    ): Promise<void> {
         try {
-            const { type, userId, productId, transactionId, environment, price, currency } = data;
+            const embed = {
+                title: "👋 New User Sign Up",
+                color: 0x5865f2, // Discord blurple
+                fields: [
+                    {
+                        name: "User ID",
+                        value: userId,
+                        inline: true,
+                    },
+                    {
+                        name: "Timestamp",
+                        value: `<t:${Math.floor(Date.now() / 1000)}:F>`,
+                        inline: true,
+                    },
+                ],
+                timestamp: new Date().toISOString(),
+            };
+
+            if (callsign) {
+                embed.fields.push({
+                    name: "Callsign",
+                    value: callsign,
+                    inline: true,
+                });
+            }
+
+            const payload = {
+                embeds: [embed],
+            };
+
+            const response = await fetch(DISCORD_SUPABASE_WEBHOOK_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                logger.warn("Failed to send Discord signup notification:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                });
+            } else {
+                logger.info("Discord signup notification sent successfully", {
+                    userId,
+                });
+            }
+        } catch (error) {
+            logger.error("Error sending Discord signup notification:", error);
+        }
+    }
+
+    async sendAppStoreNotification(
+        data: DiscordNotificationData
+    ): Promise<void> {
+        try {
+            const {
+                type,
+                userId,
+                productId,
+                transactionId,
+                environment,
+                price,
+                currency,
+            } = data;
             const environmentText = environment || config.apple.environment;
             const envEmoji = environmentText === "Production" ? "🟢" : "🟡";
 
@@ -61,22 +133,22 @@ class DiscordService {
                     {
                         name: "Environment",
                         value: `${envEmoji} ${environmentText}`,
-                        inline: true
+                        inline: true,
                     },
                     {
                         name: "User ID",
                         value: userId,
-                        inline: true
-                    }
+                        inline: true,
+                    },
                 ],
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             };
 
             if (productId) {
                 embed.fields.push({
                     name: "Product ID",
                     value: productId,
-                    inline: true
+                    inline: true,
                 });
             }
 
@@ -84,7 +156,7 @@ class DiscordService {
                 embed.fields.push({
                     name: "Transaction ID",
                     value: transactionId,
-                    inline: false
+                    inline: false,
                 });
             }
 
@@ -92,39 +164,42 @@ class DiscordService {
             if (price !== undefined && currency) {
                 // Convert from milliunits to currency units (divide by 1000)
                 const priceInUnits = price / 1000;
-                const formattedPrice = new Intl.NumberFormat('en-US', {
-                    style: 'currency',
+                const formattedPrice = new Intl.NumberFormat("en-US", {
+                    style: "currency",
                     currency: currency,
                     minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
+                    maximumFractionDigits: 2,
                 }).format(priceInUnits);
 
                 embed.fields.push({
                     name: "💰 Price",
                     value: formattedPrice,
-                    inline: true
+                    inline: true,
                 });
             }
 
             const payload = {
-                embeds: [embed]
+                embeds: [embed],
             };
 
             const response = await fetch(DISCORD_WEBHOOK_URL, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
                 logger.warn("Failed to send Discord notification:", {
                     status: response.status,
-                    statusText: response.statusText
+                    statusText: response.statusText,
                 });
             } else {
-                logger.info("Discord notification sent successfully", { type, userId });
+                logger.info("Discord notification sent successfully", {
+                    type,
+                    userId,
+                });
             }
         } catch (error) {
             logger.error("Error sending Discord notification:", error);

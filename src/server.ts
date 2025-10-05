@@ -92,6 +92,7 @@ class Server {
                     "GET /api/subscriptions/premium/:userId - Check premium access",
                     "POST /api/webhooks/apple - Apple Server-to-Server notifications",
                     "GET /api/webhooks/test - Test webhook service",
+                    "POST /api/webhooks/supabase/profile - Supabase profile insert notifications",
                 ],
             });
         });

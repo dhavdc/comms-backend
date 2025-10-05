@@ -69,3 +69,11 @@ export const SUBSCRIPTION_PRODUCTS = {
 
 export type SubscriptionProduct =
     (typeof SUBSCRIPTION_PRODUCTS)[keyof typeof SUBSCRIPTION_PRODUCTS];
+
+export interface SupabaseWebhookPayload {
+    type: "INSERT" | "UPDATE" | "DELETE";
+    table: string;
+    record: any;
+    schema: string;
+    old_record: any | null;
+}
