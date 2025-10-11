@@ -39,3 +39,8 @@ export const validateReceiptSchema = Joi.object({
 export const validateWebhookSchema = Joi.object({
     signedPayload: Joi.string().required(),
 });
+
+export const validateTTSSchema = Joi.object({
+    voiceId: Joi.string().required(),
+    text: Joi.string().required().max(5000),
+});

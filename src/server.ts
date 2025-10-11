@@ -9,6 +9,7 @@ import { requestLogger, simpleRateLimit } from "@/middleware/security";
 // Import routes
 import subscriptionRoutes from "@/routes/subscriptions";
 import webhookRoutes from "@/routes/webhooks";
+import ttsRoutes from "@/routes/tts";
 
 class Server {
     private app: express.Application;
@@ -76,6 +77,7 @@ class Server {
         // API routes
         this.app.use("/api/subscriptions", subscriptionRoutes);
         this.app.use("/api/webhooks", webhookRoutes);
+        this.app.use("/api/tts", ttsRoutes);
 
         // Root endpoint
         this.app.get("/", (req, res) => {
@@ -93,6 +95,7 @@ class Server {
                     "POST /api/webhooks/apple - Apple Server-to-Server notifications",
                     "GET /api/webhooks/test - Test webhook service",
                     "POST /api/webhooks/supabase/profile - Supabase profile insert notifications",
+                    "POST /api/tts/synthesize - Convert text to speech using ElevenLabs",
                 ],
             });
         });
