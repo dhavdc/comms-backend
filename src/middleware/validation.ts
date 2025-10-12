@@ -55,4 +55,7 @@ export const validateTTSSchema = Joi.object({
         )
         .required(),
     text: Joi.string().required().max(4096), // OpenAI TTS limit
+    emotion: Joi.string()
+        .valid("happy", "normal", "upset", "angry", "angry_pointing", "rage")
+        .optional(),
 });

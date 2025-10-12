@@ -35,6 +35,25 @@ function mapVoiceIdToOpenAI(voiceId: string): string {
 }
 
 /**
+ * Generate emotion-specific instruction modifiers for TTS
+ */
+function getEmotionInstructions(emotion?: string): string {
+    const emotionModifiers: Record<string, string> = {
+        happy: "Use an encouraging, friendly, and supportive tone. Sound pleased and positive.",
+        normal: "Maintain a neutral, professional tone. Be clear and straightforward.",
+        upset: "Use a slightly stern, corrective tone. Sound mildly irritated but still professional.",
+        angry: "Use a firm, impatient tone. Sound noticeably frustrated but maintain control.",
+        angry_pointing:
+            "Use a sharp, direct tone. Sound very frustrated and emphatic.",
+        rage: "Use an extremely stern, sharp tone. Sound highly irritated and impatient, but still intelligible.",
+    };
+
+    return emotion && emotionModifiers[emotion]
+        ? ` ${emotionModifiers[emotion]}`
+        : "";
+}
+
+/**
  * POST /api/tts/synthesize
  * Convert text to speech using OpenAI TTS API
  */
@@ -43,28 +62,33 @@ router.post(
     validate(validateTTSSchema),
     async (req: AuthenticatedRequest, res): Promise<void> => {
         try {
-            const { voiceId, text } = req.body;
+            const { voiceId, text, emotion } = req.body;
 
             // Map ElevenLabs voice ID to OpenAI voice
             const openaiVoice = mapVoiceIdToOpenAI(voiceId);
 
             const model = "gpt-4o-mini-tts";
             const response_format = "mp3";
-            const instructions =
+
+            // Base instructions with emotion modifier
+            const baseInstructions =
                 "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications. Use the phonetic alphabet for capitilized letters (individual or together) (e.g. Alpha for A, Bravo for B, etc.) N123AZ should be pronounced as November one, two, three, alpha, zulu. Numbers should be pronounced separately from each other. For example, 123 should be pronounced as one, two, three.";
+            const emotionModifier = getEmotionInstructions(emotion);
+            const instructions = baseInstructions + emotionModifier;
 
             logger.info("TTS synthesis request received:", {
                 elevenLabsVoiceId: voiceId,
                 openaiVoice,
                 textLength: text.length,
+                emotion: emotion || "none",
             });
 
-            // Check cache first (use voiceId for cache key to maintain compatibility)
+            // Check cache first (include emotion in cache key)
             const cachedAudio = await cacheService.getCachedTTS(
                 text,
                 voiceId,
                 model,
-                { instructions }
+                { instructions, emotion }
             );
 
             if (cachedAudio) {
@@ -81,6 +105,7 @@ router.post(
                 voice: openaiVoice,
                 response_format,
                 instructions,
+                speed: 1.25,
             };
 
             const response = await fetch(OPENAI_API_URL, {
@@ -110,12 +135,12 @@ router.post(
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
 
-            // Cache the audio
+            // Cache the audio (include emotion in cache key)
             cacheService.setCachedTTS(
                 text,
                 voiceId,
                 model,
-                { instructions },
+                { instructions, emotion },
                 buffer
             );
 
