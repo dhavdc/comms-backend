@@ -118,6 +118,7 @@ class AppStoreService {
                                     decodedTransaction.purchaseDate ||
                                         Date.now()
                                 ).toISOString(),
+                                expired: false,
                             };
 
                             await databaseService.insertSubscriptionRecord(
@@ -335,6 +336,7 @@ class AppStoreService {
                 purchased_at: new Date(
                     transaction.purchaseDate || Date.now()
                 ).toISOString(),
+                expired: false,
             });
         }
 
@@ -362,6 +364,14 @@ class AppStoreService {
         });
 
         await databaseService.updateUserSubscriptionStatus(userId, false);
+
+        // Mark the subscription as expired in the database
+        if (transaction.originalTransactionId) {
+            await databaseService.updateSubscriptionExpiredStatus(
+                transaction.originalTransactionId,
+                true
+            );
+        }
 
         // Send Discord notification
         await discordService.sendAppStoreNotification({
@@ -437,6 +447,14 @@ class AppStoreService {
         });
 
         await databaseService.updateUserSubscriptionStatus(userId, false);
+
+        // Mark the subscription as expired in the database
+        if (transaction.originalTransactionId) {
+            await databaseService.updateSubscriptionExpiredStatus(
+                transaction.originalTransactionId,
+                true
+            );
+        }
 
         // Send Discord notification
         await discordService.sendAppStoreNotification({

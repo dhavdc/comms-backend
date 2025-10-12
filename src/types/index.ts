@@ -5,6 +5,7 @@ export interface SubscriptionRecord {
     transaction_id: string;
     environment: "Sandbox" | "Production";
     purchased_at: string;
+    expired?: boolean | null;
     created_at?: string;
     updated_at?: string;
 }

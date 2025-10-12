@@ -199,6 +199,32 @@ class DatabaseService {
             return { isPremium: false, reason: "Database error" };
         }
     }
+
+    async updateSubscriptionExpiredStatus(
+        transactionId: string,
+        expired: boolean
+    ): Promise<boolean> {
+        try {
+            const { error } = await this.supabase
+                .from("subscriptions")
+                .update({ expired })
+                .eq("transaction_id", transactionId);
+
+            if (error) {
+                logger.error("Error updating subscription expired status:", error);
+                return false;
+            }
+
+            logger.info("Subscription expired status updated:", {
+                transactionId,
+                expired,
+            });
+            return true;
+        } catch (error) {
+            logger.error("Database error updating expired status:", error);
+            return false;
+        }
+    }
 }
 
 export const databaseService = new DatabaseService();
