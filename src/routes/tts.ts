@@ -51,7 +51,7 @@ router.post(
             const model = "gpt-4o-mini-tts";
             const response_format = "mp3";
             const instructions =
-                "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications.";
+                "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications. Use the phonetic alphabet for individual capitilized letters (e.g. Alpha for A, Bravo for B, etc.)";
 
             logger.info("TTS synthesis request received:", {
                 elevenLabsVoiceId: voiceId,
