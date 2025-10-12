@@ -22,6 +22,7 @@ class CacheService {
 
         try {
             this.redis = new Redis(redisUrl, {
+                family: 0, // Enable dual stack (IPv4 and IPv6) for Railway private network
                 maxRetriesPerRequest: 3,
                 retryStrategy(times) {
                     const delay = Math.min(times * 50, 2000);
