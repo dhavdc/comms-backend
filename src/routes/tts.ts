@@ -9,11 +9,34 @@ const router = Router();
 // Apply authentication middleware to all routes
 router.use(authenticateAPI);
 
-const ELEVENLABS_API_URL = "https://api.elevenlabs.io/v1";
+const OPENAI_API_URL = "https://api.openai.com/v1/audio/speech";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+// Map ElevenLabs voice IDs to OpenAI voices
+// This allows the mobile app to continue using ElevenLabs voice IDs without app review
+const VOICE_MAPPING: Record<string, string> = {
+    "2EiwWnXFnvU5JabPnv8n": "echo", // Clyde - Male, intense, war veteran (resonant and deep)
+    CwhRBWXzGAHq8TQ4Fs17: "onyx", // Roger - Male, confident (deep and authoritative)
+    EXAVITQu4vr4xnSDxMaL: "nova", // Sarah - Female, southern accent (bright and energetic)
+    GBv7mTt0atIp3Br8iCZE: "ash", // Thomas - Male, neutral (clear and precise)
+    IKne3meq5aSn9XLyUdCD: "fable", // Charlie - Male, multilingual (engaging storyteller)
+    JBFqnCBsd6RMkjVDRZzb: "alloy", // George - Male, English (neutral and balanced)
+    TX3LPaxmHKxFdv7VOQHJ: "verse", // Liam - Male, young, articulate (versatile and expressive)
+    cjVigY5qzO86Huf0OWal: "ballad", // Eric - Male, friendly, conversational (melodic and smooth)
+    pFZP5JQG7iQjIQuC4Bku: "coral", // Lily - Female, British, warm, narration (warm and friendly)
+};
+
+/**
+ * Map ElevenLabs voice ID to OpenAI voice name
+ * Falls back to 'alloy' if voice ID not found
+ */
+function mapVoiceIdToOpenAI(voiceId: string): string {
+    return VOICE_MAPPING[voiceId] || "alloy";
+}
 
 /**
  * POST /api/tts/synthesize
- * Convert text to speech using ElevenLabs API
+ * Convert text to speech using OpenAI TTS API
  */
 router.post(
     "/synthesize",
@@ -22,23 +45,27 @@ router.post(
         try {
             const { voiceId, text } = req.body;
 
-            const modelId = "eleven_turbo_v2_5";
-            const voiceSettings = {
-                stability: 0.5,
-                similarity_boost: 0.75,
-            };
+            // Map ElevenLabs voice ID to OpenAI voice
+            const openaiVoice = mapVoiceIdToOpenAI(voiceId);
+
+            const model = "gpt-4o-mini-tts";
+            // TODO: Change to 'wav' or 'pcm' for faster response times (requires app update to handle wav format)
+            const response_format = "mp3";
+            const instructions =
+                "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications.";
 
             logger.info("TTS synthesis request received:", {
-                voiceId,
+                elevenLabsVoiceId: voiceId,
+                openaiVoice,
                 textLength: text.length,
             });
 
-            // Check cache first
+            // Check cache first (use voiceId for cache key to maintain compatibility)
             const cachedAudio = await cacheService.getCachedTTS(
                 text,
                 voiceId,
-                modelId,
-                voiceSettings
+                model,
+                { instructions }
             );
 
             if (cachedAudio) {
@@ -48,63 +75,104 @@ router.post(
                 return;
             }
 
-            // Cache miss - call ElevenLabs API
-            const response = await fetch(
-                `${ELEVENLABS_API_URL}/text-to-speech/${voiceId}`,
-                {
-                    method: "POST",
-                    headers: {
-                        Accept: "audio/mpeg",
-                        "Content-Type": "application/json",
-                        "xi-api-key":
-                            "5a934b3095ba12e94e0f834716527afd492495859d86fd738b4b1d769961be32",
-                    },
-                    body: JSON.stringify({
-                        text,
-                        model_id: modelId,
-                        voice_settings: voiceSettings,
-                    }),
-                }
-            );
+            // Cache miss - call OpenAI TTS API with streaming
+            const requestBody = {
+                model,
+                input: text,
+                voice: openaiVoice,
+                response_format,
+                instructions,
+            };
+
+            const response = await fetch(OPENAI_API_URL, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${OPENAI_API_KEY}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                logger.error("ElevenLabs API error:", {
+                logger.error("OpenAI TTS API error:", {
                     status: response.status,
                     error: errorText,
                 });
 
                 res.status(response.status).json({
                     success: false,
-                    error: `ElevenLabs API error: ${response.statusText}`,
+                    error: `OpenAI TTS API error: ${response.statusText}`,
                 });
                 return;
             }
 
-            // Get the audio response
-            const audioBuffer = await response.arrayBuffer();
-            const buffer = Buffer.from(audioBuffer);
+            // Stream the response to client while collecting for cache
+            const chunks: Buffer[] = [];
+            const body = response.body;
 
-            // Store in cache (fire and forget - don't wait)
-            cacheService.setCachedTTS(
-                text,
-                voiceId,
-                modelId,
-                voiceSettings,
-                buffer
-            );
+            if (!body) {
+                throw new Error("Response body is null");
+            }
 
             res.setHeader("Content-Type", "audio/mpeg");
             res.setHeader("X-Cache", "MISS");
-            res.send(buffer);
 
-            logger.info("TTS synthesis completed successfully");
+            // Convert web stream to node stream and handle streaming + caching
+            const reader = body.getReader();
+
+            const streamToClient = async () => {
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+
+                        if (done) {
+                            // Cache the complete audio (use voiceId for cache key)
+                            const buffer = Buffer.concat(chunks);
+                            cacheService.setCachedTTS(
+                                text,
+                                voiceId,
+                                model,
+                                { instructions },
+                                buffer
+                            );
+                            res.end();
+                            break;
+                        }
+
+                        const chunk = Buffer.from(value);
+                        chunks.push(chunk);
+
+                        // Stream to client
+                        if (!res.write(chunk)) {
+                            // Back pressure - wait for drain
+                            await new Promise((resolve) =>
+                                res.once("drain", resolve)
+                            );
+                        }
+                    }
+
+                    logger.info("TTS synthesis completed successfully");
+                } catch (error) {
+                    logger.error("Stream error:", error);
+                    if (!res.headersSent) {
+                        res.status(500).json({
+                            success: false,
+                            error: "Streaming error",
+                        });
+                    }
+                }
+            };
+
+            await streamToClient();
         } catch (error) {
             logger.error("TTS synthesis error:", error);
-            res.status(500).json({
-                success: false,
-                error: "Internal server error",
-            });
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    error: "Internal server error",
+                });
+            }
         }
     }
 );

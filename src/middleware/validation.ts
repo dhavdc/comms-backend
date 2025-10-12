@@ -41,6 +41,18 @@ export const validateWebhookSchema = Joi.object({
 });
 
 export const validateTTSSchema = Joi.object({
-    voiceId: Joi.string().required(),
-    text: Joi.string().required().max(5000),
+    voiceId: Joi.string()
+        .valid(
+            "2EiwWnXFnvU5JabPnv8n", // Clyde
+            "CwhRBWXzGAHq8TQ4Fs17", // Roger
+            "EXAVITQu4vr4xnSDxMaL", // Sarah
+            "GBv7mTt0atIp3Br8iCZE", // Thomas
+            "IKne3meq5aSn9XLyUdCD", // Charlie
+            "JBFqnCBsd6RMkjVDRZzb", // George
+            "TX3LPaxmHKxFdv7VOQHJ", // Liam
+            "cjVigY5qzO86Huf0OWal", // Eric
+            "pFZP5JQG7iQjIQuC4Bku" // Lily
+        )
+        .required(),
+    text: Joi.string().required().max(4096), // OpenAI TTS limit
 });

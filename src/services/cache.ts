@@ -64,7 +64,7 @@ class CacheService {
         text: string,
         voiceId: string,
         modelId: string,
-        voiceSettings: { stability: number; similarity_boost: number }
+        voiceSettings: { instructions?: string }
     ): string {
         const payload = JSON.stringify({
             text,
@@ -85,7 +85,7 @@ class CacheService {
         text: string,
         voiceId: string,
         modelId: string,
-        voiceSettings: { stability: number; similarity_boost: number }
+        voiceSettings: { instructions?: string }
     ): Promise<Buffer | null> {
         if (!this.redis) {
             return null;
@@ -129,7 +129,7 @@ class CacheService {
         text: string,
         voiceId: string,
         modelId: string,
-        voiceSettings: { stability: number; similarity_boost: number },
+        voiceSettings: { instructions?: string },
         audioBuffer: Buffer
     ): Promise<boolean> {
         if (!this.redis) {
