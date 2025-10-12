@@ -49,7 +49,7 @@ router.post(
             const openaiVoice = mapVoiceIdToOpenAI(voiceId);
 
             const model = "gpt-4o-mini-tts";
-            const response_format = "wav";
+            const response_format = "mp3";
             const instructions =
                 "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications.";
 
@@ -68,13 +68,13 @@ router.post(
             );
 
             if (cachedAudio) {
-                res.setHeader("Content-Type", "audio/wav");
+                res.setHeader("Content-Type", "audio/mpeg");
                 res.setHeader("X-Cache", "HIT");
                 res.send(cachedAudio);
                 return;
             }
 
-            // Cache miss - call OpenAI TTS API with streaming
+            // Cache miss - call OpenAI TTS API
             const requestBody = {
                 model,
                 input: text,
@@ -106,64 +106,25 @@ router.post(
                 return;
             }
 
-            // Stream the response to client while collecting for cache
-            const chunks: Buffer[] = [];
-            const body = response.body;
+            // Get the full audio buffer
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
 
-            if (!body) {
-                throw new Error("Response body is null");
-            }
+            // Cache the audio
+            cacheService.setCachedTTS(
+                text,
+                voiceId,
+                model,
+                { instructions },
+                buffer
+            );
 
-            res.setHeader("Content-Type", "audio/wav");
+            // Send to client
+            res.setHeader("Content-Type", "audio/mpeg");
             res.setHeader("X-Cache", "MISS");
+            res.send(buffer);
 
-            // Convert web stream to node stream and handle streaming + caching
-            const reader = body.getReader();
-
-            const streamToClient = async () => {
-                try {
-                    while (true) {
-                        const { done, value } = await reader.read();
-
-                        if (done) {
-                            // Cache the complete audio (use voiceId for cache key)
-                            const buffer = Buffer.concat(chunks);
-                            cacheService.setCachedTTS(
-                                text,
-                                voiceId,
-                                model,
-                                { instructions },
-                                buffer
-                            );
-                            res.end();
-                            break;
-                        }
-
-                        const chunk = Buffer.from(value);
-                        chunks.push(chunk);
-
-                        // Stream to client
-                        if (!res.write(chunk)) {
-                            // Back pressure - wait for drain
-                            await new Promise((resolve) =>
-                                res.once("drain", resolve)
-                            );
-                        }
-                    }
-
-                    logger.info("TTS synthesis completed successfully");
-                } catch (error) {
-                    logger.error("Stream error:", error);
-                    if (!res.headersSent) {
-                        res.status(500).json({
-                            success: false,
-                            error: "Streaming error",
-                        });
-                    }
-                }
-            };
-
-            await streamToClient();
+            logger.info("TTS synthesis completed successfully");
         } catch (error) {
             logger.error("TTS synthesis error:", error);
             if (!res.headersSent) {
