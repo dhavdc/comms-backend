@@ -49,8 +49,7 @@ router.post(
             const openaiVoice = mapVoiceIdToOpenAI(voiceId);
 
             const model = "gpt-4o-mini-tts";
-            // TODO: Change to 'wav' or 'pcm' for faster response times (requires app update to handle wav format)
-            const response_format = "mp3";
+            const response_format = "wav";
             const instructions =
                 "Speak in a clear, professional air traffic control style. Use a calm, authoritative tone with precise pronunciation. Maintain a steady pace typical of aviation radio communications.";
 
@@ -69,7 +68,7 @@ router.post(
             );
 
             if (cachedAudio) {
-                res.setHeader("Content-Type", "audio/mpeg");
+                res.setHeader("Content-Type", "audio/wav");
                 res.setHeader("X-Cache", "HIT");
                 res.send(cachedAudio);
                 return;
@@ -115,7 +114,7 @@ router.post(
                 throw new Error("Response body is null");
             }
 
-            res.setHeader("Content-Type", "audio/mpeg");
+            res.setHeader("Content-Type", "audio/wav");
             res.setHeader("X-Cache", "MISS");
 
             // Convert web stream to node stream and handle streaming + caching
