@@ -19,11 +19,11 @@ const VOICE_MAPPING: Record<string, string> = {
     CwhRBWXzGAHq8TQ4Fs17: "onyx", // Roger - Male, confident (deep and authoritative)
     EXAVITQu4vr4xnSDxMaL: "nova", // Sarah - Female, southern accent (bright and energetic)
     GBv7mTt0atIp3Br8iCZE: "ash", // Thomas - Male, neutral (clear and precise)
-    IKne3meq5aSn9XLyUdCD: "fable", // Charlie - Male, multilingual (engaging storyteller)
-    JBFqnCBsd6RMkjVDRZzb: "alloy", // George - Male, English (neutral and balanced)
+    IKne3meq5aSn9XLyUdCD: "ash", // Charlie - Male, multilingual (engaging storyteller)
+    JBFqnCBsd6RMkjVDRZzb: "fable", // George - Male, English (neutral and balanced)
     TX3LPaxmHKxFdv7VOQHJ: "verse", // Liam - Male, young, articulate (versatile and expressive)
     cjVigY5qzO86Huf0OWal: "ballad", // Eric - Male, friendly, conversational (melodic and smooth)
-    pFZP5JQG7iQjIQuC4Bku: "coral", // Lily - Female, British, warm, narration (warm and friendly)
+    pFZP5JQG7iQjIQuC4Bku: "alloy", // Lily - Female, British, warm, narration (warm and friendly)
 };
 
 /**
