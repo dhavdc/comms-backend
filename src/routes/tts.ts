@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticateAPI, AuthenticatedRequest } from "@/middleware/auth";
 import { validate, validateTTSSchema } from "@/middleware/validation";
+import { cacheService } from "@/services/cache";
 import logger from "@/utils/logger";
 
 const router = Router();
@@ -21,11 +22,33 @@ router.post(
         try {
             const { voiceId, text } = req.body;
 
+            const modelId = "eleven_turbo_v2_5";
+            const voiceSettings = {
+                stability: 0.5,
+                similarity_boost: 0.75,
+            };
+
             logger.info("TTS synthesis request received:", {
                 voiceId,
                 textLength: text.length,
             });
 
+            // Check cache first
+            const cachedAudio = await cacheService.getCachedTTS(
+                text,
+                voiceId,
+                modelId,
+                voiceSettings
+            );
+
+            if (cachedAudio) {
+                res.setHeader("Content-Type", "audio/mpeg");
+                res.setHeader("X-Cache", "HIT");
+                res.send(cachedAudio);
+                return;
+            }
+
+            // Cache miss - call ElevenLabs API
             const response = await fetch(
                 `${ELEVENLABS_API_URL}/text-to-speech/${voiceId}`,
                 {
@@ -38,11 +61,8 @@ router.post(
                     },
                     body: JSON.stringify({
                         text,
-                        model_id: "eleven_turbo_v2_5",
-                        voice_settings: {
-                            stability: 0.5,
-                            similarity_boost: 0.75,
-                        },
+                        model_id: modelId,
+                        voice_settings: voiceSettings,
                     }),
                 }
             );
@@ -61,11 +81,22 @@ router.post(
                 return;
             }
 
-            // Stream the audio response
+            // Get the audio response
             const audioBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(audioBuffer);
+
+            // Store in cache (fire and forget - don't wait)
+            cacheService.setCachedTTS(
+                text,
+                voiceId,
+                modelId,
+                voiceSettings,
+                buffer
+            );
 
             res.setHeader("Content-Type", "audio/mpeg");
-            res.send(Buffer.from(audioBuffer));
+            res.setHeader("X-Cache", "MISS");
+            res.send(buffer);
 
             logger.info("TTS synthesis completed successfully");
         } catch (error) {
