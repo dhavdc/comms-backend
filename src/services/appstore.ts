@@ -16,10 +16,13 @@ import {
     ValidationResponse,
     WebhookNotification,
     SUBSCRIPTION_PRODUCTS,
+    PromotionalOfferSignatureRequest,
+    PromotionalOfferSignatureResponse,
 } from "@/types";
 import { databaseService } from "./database";
 import { discordService } from "./discord";
 import fs from "fs";
+import crypto from "crypto";
 
 class AppStoreService {
     private client: AppStoreServerAPIClient;
@@ -557,6 +560,78 @@ class AppStoreService {
         } catch (error) {
             logger.error("Error checking subscription status:", error);
             return { active: false };
+        }
+    }
+
+    /**
+     * Generate a promotional offer signature for iOS In-App Purchases
+     * The signature must be generated server-side using the Apple private key
+     *
+     * @param request - Promotional offer signature request containing product ID, offer ID, nonce, and user ID
+     * @returns The signature and related data needed for the purchase request
+     */
+    generatePromotionalOfferSignature(
+        request: PromotionalOfferSignatureRequest
+    ): PromotionalOfferSignatureResponse {
+        try {
+            const { productId, offerIdentifier, applicationUsername, nonce } =
+                request;
+
+            // Generate timestamp on server-side for security
+            const timestamp = Date.now();
+
+            logger.info("Generating promotional offer signature:", {
+                productId,
+                offerIdentifier,
+                userId: applicationUsername,
+                timestamp,
+            });
+
+            // Normalize the nonce (must be lowercase UUID without dashes)
+            const normalizedNonce = nonce.toLowerCase().replace(/-/g, "");
+
+            // Create the payload to sign according to Apple's specification
+            // Each field is separated by \u2063 (invisible separator)
+            const separator = "\u2063";
+            const payload = [
+                config.apple.bundleId,
+                config.apple.keyId,
+                productId,
+                offerIdentifier,
+                applicationUsername,
+                normalizedNonce,
+                timestamp.toString(),
+            ].join(separator);
+
+            logger.info("Payload to sign created", {
+                payloadLength: payload.length,
+            });
+
+            // Sign the payload using ECDSA with SHA-256
+            // The private key should be in PEM format
+            const sign = crypto.createSign("SHA256");
+            sign.update(payload);
+            sign.end();
+
+            const signature = sign.sign(config.apple.privateKey, "base64");
+
+            logger.info("Promotional offer signature generated successfully");
+
+            return {
+                success: true,
+                data: {
+                    signature,
+                    nonce: normalizedNonce,
+                    timestamp,
+                    keyIdentifier: config.apple.keyId,
+                },
+            };
+        } catch (error) {
+            logger.error("Error generating promotional offer signature:", error);
+            return {
+                success: false,
+                error: "Failed to generate promotional offer signature",
+            };
         }
     }
 }

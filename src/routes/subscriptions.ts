@@ -4,7 +4,7 @@ import { databaseService } from '@/services/database';
 import { authenticateAPI, extractUserId, AuthenticatedRequest } from '@/middleware/auth';
 import { validate, validateReceiptSchema } from '@/middleware/validation';
 import logger from '@/utils/logger';
-import { APIResponse, ValidationRequest } from '@/types';
+import { APIResponse, ValidationRequest, PromotionalOfferSignatureRequest } from '@/types';
 
 const router = Router();
 
@@ -174,6 +174,48 @@ router.get('/premium/:userId',
       });
     } catch (error) {
       logger.error('Premium access check error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal server error'
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/subscriptions/promotional-offer-signature
+ * Generate a promotional offer signature for iOS In-App Purchases
+ * The signature must be generated server-side using the Apple private key
+ */
+router.post('/promotional-offer-signature',
+  async (req: AuthenticatedRequest, res): Promise<void> => {
+    try {
+      const request: PromotionalOfferSignatureRequest = req.body;
+
+      // Validate required fields
+      if (!request.productId || !request.offerIdentifier || !request.applicationUsername || !request.nonce) {
+        res.status(400).json({
+          success: false,
+          error: 'Missing required fields: productId, offerIdentifier, applicationUsername, nonce'
+        });
+        return;
+      }
+
+      logger.info('Promotional offer signature request:', {
+        productId: request.productId,
+        offerIdentifier: request.offerIdentifier,
+        userId: request.applicationUsername
+      });
+
+      const result = appStoreService.generatePromotionalOfferSignature(request);
+
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json(result);
+      }
+    } catch (error) {
+      logger.error('Promotional offer signature error:', error);
       res.status(500).json({
         success: false,
         error: 'Internal server error'
