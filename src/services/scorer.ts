@@ -7,14 +7,14 @@ import similarity from "compute-cosine-similarity";
 import logger from "@/utils/logger.js";
 
 // Threshold for cosine similarity to determine if messages match
-const SIMILARITY_THRESHOLD = 0.91;
+const SIMILARITY_THRESHOLD = 0.7;
 
 // Weights for combined scoring
 const VARIABLE_WEIGHT = 0.6; // How much variable matching matters
 const SEMANTIC_WEIGHT = 0.4; // How much semantic similarity matters
 
 // Variable match threshold (fuzzy matching for individual variables)
-const VARIABLE_MATCH_THRESHOLD = 0.8;
+const VARIABLE_MATCH_THRESHOLD = 0.7;
 
 class ScorerService {
     private extractor: FeatureExtractionPipeline | null = null;
