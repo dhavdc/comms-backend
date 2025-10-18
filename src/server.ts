@@ -142,7 +142,10 @@ class Server {
 }
 
 // Start the server if this file is run directly
-if (require.main === module) {
+// In ESM, we check if this module is the entry point using import.meta.url
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+
+if (isMainModule) {
     try {
         const server = new Server();
         server.start();
