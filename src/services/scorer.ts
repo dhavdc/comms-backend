@@ -195,6 +195,9 @@ class ScorerService {
             for (const altName of callsignAlternates) {
                 if (altName in variables) {
                     const varData = variables[altName];
+                    if (!varData) {
+                        continue;
+                    }
                     const normalizedValue = varData.value.toLowerCase().trim();
                     const normalizedInput = userInput.toLowerCase();
 
@@ -203,7 +206,11 @@ class ScorerService {
 
                     let matchedWords = 0;
                     for (const word of valueWords) {
-                        if (inputWords.some((iw) => this.fuzzyWordMatch(word, iw))) {
+                        if (
+                            inputWords.some((iw) =>
+                                this.fuzzyWordMatch(word, iw)
+                            )
+                        ) {
                             matchedWords++;
                         }
                     }
