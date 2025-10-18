@@ -10,6 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "type-check": "tsc --noEmit"
   },
+  "type": "module",
   "keywords": [
     "subscription",
     "app-store",

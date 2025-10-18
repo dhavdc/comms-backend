@@ -1,8 +1,10 @@
+import {
+    pipeline,
+    FeatureExtractionPipeline,
+    Tensor,
+} from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
 import logger from "@/utils/logger";
-
-// Type imports for transformers (using type-only import)
-import type { FeatureExtractionPipeline, Tensor } from "@xenova/transformers";
 
 // Threshold for cosine similarity to determine if messages match
 const SIMILARITY_THRESHOLD = 0.91;
@@ -18,10 +20,9 @@ class ScorerService {
 
     private async initializeModel(): Promise<void> {
         try {
-            logger.info("Loading sentence-transformers/all-MiniLM-L6-v2 model...");
-
-            // Dynamic import for ES Module
-            const { pipeline } = await import("@xenova/transformers");
+            logger.info(
+                "Loading sentence-transformers/all-MiniLM-L6-v2 model..."
+            );
 
             this.extractor = (await pipeline(
                 "feature-extraction",
@@ -71,10 +72,7 @@ class ScorerService {
             const userEmbedding = await this.getEmbedding(userInput);
 
             // Calculate cosine similarity
-            const similarityScore = similarity(
-                correctEmbedding,
-                userEmbedding
-            );
+            const similarityScore = similarity(correctEmbedding, userEmbedding);
 
             logger.info("Similarity score:", {
                 similarity: similarityScore,
@@ -82,7 +80,9 @@ class ScorerService {
             });
 
             // Determine if the similarity meets the threshold
-            const correct = similarityScore !== null && similarityScore >= SIMILARITY_THRESHOLD;
+            const correct =
+                similarityScore !== null &&
+                similarityScore >= SIMILARITY_THRESHOLD;
 
             return similarityScore !== null
                 ? { correct, similarity: similarityScore }

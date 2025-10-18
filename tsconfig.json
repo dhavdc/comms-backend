@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ES2022",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -23,7 +23,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
