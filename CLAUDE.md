@@ -50,6 +50,8 @@ The codebase uses a service-based architecture with singleton instances:
 
 - **`services/cache.ts`**: Redis-based caching for TTS audio using ioredis. Generates MD5 hashes of TTS parameters (text + voice settings) as cache keys. Gracefully degrades if Redis is unavailable.
 
+- **`services/scorer.ts`**: Message comparison service using sentence-transformers/all-MiniLM-L6-v2 embedding model via @xenova/transformers. Computes semantic similarity between messages using cosine similarity with a threshold of 0.91.
+
 - **`services/discord.ts`**: Discord webhook notifications for subscription events (not shown in files but referenced in appstore.ts).
 
 ### Routes
@@ -57,6 +59,7 @@ The codebase uses a service-based architecture with singleton instances:
 - **`routes/subscriptions.ts`**: Subscription validation, status checks, history, and premium access verification
 - **`routes/webhooks.ts`**: Apple Server-to-Server notifications (v2) and Supabase database webhooks
 - **`routes/tts.ts`**: ElevenLabs text-to-speech synthesis with Redis caching
+- **`routes/scorer.ts`**: Message comparison endpoint using semantic similarity
 
 ### Middleware
 
@@ -116,6 +119,15 @@ Check via `/api/subscriptions/premium/:userId`
 - `has_purchased_subscription_before` boolean (trial eligibility tracking)
 - `one_time_unlock` boolean (non-subscription premium access)
 - `subscribed_updated_time` timestamp
+
+## TypeScript Coding Standards
+
+- **No `any` Types**: NEVER use the `any` type unless it is absolutely the last resort. Always research and use the correct types from library definitions. When encountering type errors:
+  1. First, check the library's type definitions (usually in `node_modules/@types/` or the package's own types)
+  2. Import and use the proper types from the library
+  3. Only use type assertions (`as Type`) when you have verified the correct type
+  4. Never use `any` as a quick fix for type errors
+- **Type Safety**: Maintain strict type safety throughout the codebase. All functions should have explicit return types and parameter types.
 
 ## Important Considerations
 

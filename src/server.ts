@@ -10,6 +10,7 @@ import { requestLogger, simpleRateLimit } from "@/middleware/security";
 import subscriptionRoutes from "@/routes/subscriptions";
 import webhookRoutes from "@/routes/webhooks";
 import ttsRoutes from "@/routes/tts";
+import scorerRoutes from "@/routes/scorer";
 
 class Server {
     private app: express.Application;
@@ -78,6 +79,7 @@ class Server {
         this.app.use("/api/subscriptions", subscriptionRoutes);
         this.app.use("/api/webhooks", webhookRoutes);
         this.app.use("/api/tts", ttsRoutes);
+        this.app.use("/api/scorer", scorerRoutes);
 
         // Root endpoint
         this.app.get("/", (req, res) => {
@@ -96,6 +98,7 @@ class Server {
                     "GET /api/webhooks/test - Test webhook service",
                     "POST /api/webhooks/supabase/profile - Supabase profile insert notifications",
                     "POST /api/tts/synthesize - Convert text to speech using ElevenLabs",
+                    "POST /api/scorer/compare - Compare user message with correct message",
                 ],
             });
         });
