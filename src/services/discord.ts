@@ -1,5 +1,5 @@
-import { config } from "@/utils/config";
-import logger from "@/utils/logger";
+import { config } from "@/utils/config.js";
+import logger from "@/utils/logger.js";
 
 const DISCORD_WEBHOOK_URL =
     "https://discord.com/api/webhooks/1422023513006538886/78jeJBazdcV88QngfPGHhiccIqZuoaPGxIMgEu3F81LpIfook3QDjnz_3xk7sx69wNRZ";

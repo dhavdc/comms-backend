@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { appStoreService } from '@/services/appstore';
-import { databaseService } from '@/services/database';
-import { authenticateAPI, extractUserId, AuthenticatedRequest } from '@/middleware/auth';
-import { validate, validateReceiptSchema } from '@/middleware/validation';
-import logger from '@/utils/logger';
-import { APIResponse, ValidationRequest, PromotionalOfferSignatureRequest } from '@/types';
+import { appStoreService } from '@/services/appstore.js';
+import { databaseService } from '@/services/database.js';
+import { authenticateAPI, extractUserId, AuthenticatedRequest } from '@/middleware/auth.js';
+import { validate, validateReceiptSchema } from '@/middleware/validation.js';
+import logger from '@/utils/logger.js';
+import { APIResponse, ValidationRequest, PromotionalOfferSignatureRequest } from '@/types/index.js';
 
 const router = Router();
 

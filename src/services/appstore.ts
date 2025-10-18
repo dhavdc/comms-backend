@@ -9,8 +9,8 @@ import {
     TransactionHistoryRequest,
     ProductType,
 } from "@apple/app-store-server-library";
-import { config } from "@/utils/config";
-import logger from "@/utils/logger";
+import { config } from "@/utils/config.js";
+import logger from "@/utils/logger.js";
 import {
     ValidationRequest,
     ValidationResponse,
@@ -18,9 +18,9 @@ import {
     SUBSCRIPTION_PRODUCTS,
     PromotionalOfferSignatureRequest,
     PromotionalOfferSignatureResponse,
-} from "@/types";
-import { databaseService } from "./database";
-import { discordService } from "./discord";
+} from "@/types/index.js";
+import { databaseService } from "./database.js";
+import { discordService } from "./discord.js";
 import fs from "fs";
 import crypto from "crypto";
 

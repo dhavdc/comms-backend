@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { authenticateAPI, AuthenticatedRequest } from "@/middleware/auth";
-import { validate, validateTTSSchema } from "@/middleware/validation";
-import { cacheService } from "@/services/cache";
-import logger from "@/utils/logger";
+import { authenticateAPI, AuthenticatedRequest } from "@/middleware/auth.js";
+import { validate, validateTTSSchema } from "@/middleware/validation.js";
+import { cacheService } from "@/services/cache.js";
+import logger from "@/utils/logger.js";
 
 const router = Router();
 

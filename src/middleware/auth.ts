@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { config } from "@/utils/config";
-import logger from "@/utils/logger";
-import { APIResponse } from "@/types";
+import { config } from "@/utils/config.js";
+import logger from "@/utils/logger.js";
+import { APIResponse } from "@/types/index.js";
 
 interface AuthenticatedRequest extends Request {
     userId?: string;

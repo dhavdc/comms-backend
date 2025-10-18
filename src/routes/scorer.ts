@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { scorerService } from "@/services/scorer";
-import { authenticateAPI, AuthenticatedRequest } from "@/middleware/auth";
-import logger from "@/utils/logger";
+import { scorerService } from "@/services/scorer.js";
+import { authenticateAPI, AuthenticatedRequest } from "@/middleware/auth.js";
+import logger from "@/utils/logger.js";
 
 const router = Router();
 

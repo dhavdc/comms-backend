@@ -4,7 +4,7 @@ import {
     Tensor,
 } from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
-import logger from "@/utils/logger";
+import logger from "@/utils/logger.js";
 
 // Threshold for cosine similarity to determine if messages match
 const SIMILARITY_THRESHOLD = 0.91;

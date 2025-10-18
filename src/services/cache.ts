@@ -1,6 +1,6 @@
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import { createHash } from "crypto";
-import logger from "@/utils/logger";
+import logger from "@/utils/logger.js";
 
 class CacheService {
     private redis: Redis | null = null;
@@ -21,14 +21,14 @@ class CacheService {
         }
 
         try {
-            this.redis = new Redis(redisUrl, {
+            this.redis = new Redis(redisUrl as string, {
                 family: 0, // Enable dual stack (IPv4 and IPv6) for Railway private network
                 maxRetriesPerRequest: 3,
-                retryStrategy(times) {
+                retryStrategy(times: number) {
                     const delay = Math.min(times * 50, 2000);
                     return delay;
                 },
-                reconnectOnError(err) {
+                reconnectOnError(err: Error) {
                     const targetError = "READONLY";
                     if (err.message.includes(targetError)) {
                         return true;
@@ -37,7 +37,7 @@ class CacheService {
                 },
             });
 
-            this.redis.on("error", (err) => {
+            this.redis.on("error", (err: Error) => {
                 logger.error("Redis client error:", err);
             });
 

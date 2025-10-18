@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { config } from "@/utils/config";
-import logger from "@/utils/logger";
-import { SubscriptionRecord, UserProfile } from "@/types";
+import { config } from "@/utils/config.js";
+import logger from "@/utils/logger.js";
+import { SubscriptionRecord, UserProfile } from "@/types/index.js";
 
 class DatabaseService {
     private supabase: SupabaseClient;

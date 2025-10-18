@@ -1,16 +1,16 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import { config } from "@/utils/config";
-import logger from "@/utils/logger";
-import { errorHandler, notFoundHandler } from "@/middleware/errorHandler";
-import { requestLogger, simpleRateLimit } from "@/middleware/security";
+import { config } from "@/utils/config.js";
+import logger from "@/utils/logger.js";
+import { errorHandler, notFoundHandler } from "@/middleware/errorHandler.js";
+import { requestLogger, simpleRateLimit } from "@/middleware/security.js";
 
 // Import routes
-import subscriptionRoutes from "@/routes/subscriptions";
-import webhookRoutes from "@/routes/webhooks";
-import ttsRoutes from "@/routes/tts";
-import scorerRoutes from "@/routes/scorer";
+import subscriptionRoutes from "@/routes/subscriptions.js";
+import webhookRoutes from "@/routes/webhooks.js";
+import ttsRoutes from "@/routes/tts.js";
+import scorerRoutes from "@/routes/scorer.js";
 
 class Server {
     private app: express.Application;

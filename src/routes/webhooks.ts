@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { appStoreService } from "@/services/appstore";
-import { validate, validateWebhookSchema } from "@/middleware/validation";
-import { appleTestNotifications } from "@/utils/apple-test-notifications";
-import logger from "@/utils/logger";
-import { APIResponse, SupabaseWebhookPayload, UserProfile } from "@/types";
-import { discordService } from "@/services/discord";
+import { appStoreService } from "@/services/appstore.js";
+import { validate, validateWebhookSchema } from "@/middleware/validation.js";
+import { appleTestNotifications } from "@/utils/apple-test-notifications.js";
+import logger from "@/utils/logger.js";
+import { APIResponse, SupabaseWebhookPayload, UserProfile } from "@/types/index.js";
+import { discordService } from "@/services/discord.js";
 
 const router = Router();
 
