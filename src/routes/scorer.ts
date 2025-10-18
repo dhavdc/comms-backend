@@ -10,28 +10,30 @@ router.use(authenticateAPI);
 
 /**
  * POST /api/scorer/compare
- * Compare a user's message with the correct message using semantic similarity
+ * Compare a user's message using template-based variable scoring
  */
 router.post("/compare", async (req: AuthenticatedRequest, res): Promise<void> => {
     try {
-        const { correctMessage, userInput } = req.body;
+        const { processedTemplate, variables, userInput } = req.body;
 
         // Validate required fields
-        if (!correctMessage || !userInput) {
+        if (!processedTemplate || !variables || !userInput) {
             res.status(400).json({
                 success: false,
-                error: "Missing required fields: correctMessage, userInput",
+                error: "Missing required fields: processedTemplate, variables, userInput",
             });
             return;
         }
 
-        logger.info("Message comparison request:", {
-            correctMessage,
+        logger.info("Template-based message comparison request:", {
+            processedTemplate,
+            variables,
             userInput,
         });
 
-        const result = await scorerService.compareMessages(
-            correctMessage,
+        const result = await scorerService.compareMessagesWithTemplate(
+            processedTemplate,
+            variables,
             userInput
         );
 
@@ -40,6 +42,9 @@ router.post("/compare", async (req: AuthenticatedRequest, res): Promise<void> =>
             data: {
                 correct: result.correct,
                 similarity: result.similarity,
+                variableScore: result.variableScore,
+                semanticScore: result.semanticScore,
+                matchedVariables: result.matchedVariables,
             },
         });
     } catch (error) {
