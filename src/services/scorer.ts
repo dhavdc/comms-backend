@@ -1,10 +1,8 @@
-import {
-    pipeline,
-    FeatureExtractionPipeline,
-    Tensor,
-} from "@xenova/transformers";
 import similarity from "compute-cosine-similarity";
 import logger from "@/utils/logger";
+
+// Type imports for transformers (using type-only import)
+import type { FeatureExtractionPipeline, Tensor } from "@xenova/transformers";
 
 // Threshold for cosine similarity to determine if messages match
 const SIMILARITY_THRESHOLD = 0.91;
@@ -21,6 +19,10 @@ class ScorerService {
     private async initializeModel(): Promise<void> {
         try {
             logger.info("Loading sentence-transformers/all-MiniLM-L6-v2 model...");
+
+            // Dynamic import for ES Module
+            const { pipeline } = await import("@xenova/transformers");
+
             this.extractor = (await pipeline(
                 "feature-extraction",
                 "Xenova/all-MiniLM-L6-v2"
